@@ -1,32 +1,19 @@
 package com.stanusch.techtalks.trie.gtrie;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 
-public class GTrieNode<V> {
-    private final Map<String, GTrieNode> children = new ConcurrentHashMap<>();
-    private boolean hasResults;
-    private List<V> results = new ArrayList<>();
+class GTrieNode<K, V> {
+    private final Map<K, GTrieNode<K,V>> children = Maps.newConcurrentMap();
+    private Set<V> results = Sets.newConcurrentHashSet();
 
-    Map<String, GTrieNode> getChildren() {
+    Map<K, GTrieNode<K,V>> getChildren() {
         return children;
     }
-
-    public boolean hasResults() {
-        return hasResults;
-    }
-
-    public void setEndOfSentence(boolean endOfSentence) {
-        this.hasResults = endOfSentence;
-    }
-
-    public List<V> getResults() {
+    Set<V> getResults() {
         return results;
-    }
-
-    public void setResults(List<V> results) {
-        this.results = results;
     }
 }

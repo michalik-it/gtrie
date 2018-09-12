@@ -65,7 +65,7 @@ public class TrieApplicationTests {
         GTrie trie = createExampleGTrie();
 
         assertTrue(trie.find(Lists.newArrayList("nie", "posiadać", "yyy","zzz")).contains(2));
-        assertTrue(trie.delete(Lists.newArrayList("nie","posiadać","zzz","yyy"), 2));
+        assertTrue(trie.remove(Lists.newArrayList("nie","posiadać","zzz","yyy"), 2));
         assertFalse(trie.find(Lists.newArrayList("nie", "posiadać", "yyy", "zzz")).contains(2));
         assertTrue(trie.find(Lists.newArrayList("aaa", "bolek")).contains(4));
         assertTrue(trie.find(Lists.newArrayList("aaa", "janek")).contains(3));
@@ -76,7 +76,7 @@ public class TrieApplicationTests {
 
     @Test
     public void intGTrieTest() {
-        GTrie<Integer, Integer> trie = createExampleIntGTrie();
+        Trie<Integer, Integer> trie = createExampleIntGTrie();
 
         assertTrue(trie.find(Lists.newArrayList(1, 2)).isEmpty());
         assertTrue(trie.find(Lists.newArrayList(1, 2, 4)).contains(2));
@@ -85,36 +85,36 @@ public class TrieApplicationTests {
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3)).size() == 2);
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3)).contains(1));
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3)).contains(3));
-        boolean delete = trie.delete(Lists.newArrayList(1, 2, 3), 3);
+        boolean delete = trie.remove(Lists.newArrayList(1, 2, 3), 3);
         assertTrue(delete);
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3)).size() == 1);
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3)).contains(1));
-        delete = trie.delete(Lists.newArrayList(1, 2, 3), 10);
+        delete = trie.remove(Lists.newArrayList(1, 2, 3), 10);
         assertFalse(delete);
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3)).contains(1));
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3)).size() == 1);
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3)).contains(1));
-        delete = trie.delete(Lists.newArrayList(1, 2, 3), 1);
+        delete = trie.remove(Lists.newArrayList(1, 2, 3), 1);
         assertTrue(delete);
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3)).size() == 0);
         trie.insert(Lists.newArrayList(1,2,3), 1);
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3, 4, 5, 6, 7)).contains(1));
 
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3, 4)).contains(3));
-        trie.delete(Lists.newArrayList(1,2,3), 1);
+        trie.remove(Lists.newArrayList(1,2,3), 1);
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3, 4)).contains(3));
-        trie.delete(Lists.newArrayList(1,2,4), 2);
+        trie.remove(Lists.newArrayList(1,2,4), 2);
 
 
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3, 4)).contains(3));
-        trie.delete(Lists.newArrayList(1,2,3), 3);
+        trie.remove(Lists.newArrayList(1,2,3), 3);
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3, 4)).contains(3));
-        trie.delete(Lists.newArrayList(100, 200), 3);
+        trie.remove(Lists.newArrayList(100, 200), 3);
 
         System.out.println(trie);
 
         assertTrue(trie.find(Lists.newArrayList(1, 2, 3, 4)).contains(3));
-        assertTrue(trie.delete(Lists.newArrayList(1, 2, 3, 4), 3));
+        assertTrue(trie.remove(Lists.newArrayList(1, 2, 3, 4), 3));
 
         System.out.println(trie);
 

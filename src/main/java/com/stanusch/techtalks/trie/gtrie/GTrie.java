@@ -1,14 +1,18 @@
 package com.stanusch.techtalks.trie.gtrie;
 
+import com.stanusch.techtalks.trie.Trie;
 import com.stanusch.techtalks.trie.TrieFilter;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class GTrie<K extends Comparable, V> {
-    private GTrieNode root;
-
-    private TrieFilter<V> resultFilter;
+/**
+ * @param <K> A key for trie structure, must extend Comparable and must have valid hashode and equals
+ * @param <V> A value (result) for trie structure
+ */
+public class GTrie<K extends Comparable, V> implements Trie<K,V> {
+    private GTrieNode<K,V> root;
+    private TrieFilter<V> resultFilter = item -> true;
     private Comparator<V> resultComparator = (o1, o2) -> 0;
 
     /**
@@ -18,17 +22,17 @@ public class GTrie<K extends Comparable, V> {
      */
 
     public GTrie() {
-        root = new GTrieNode();
+        root = new GTrieNode<>();
     }
 
     public GTrie(TrieFilter<V> resultFilter) {
         this.resultFilter = resultFilter;
-        root = new GTrieNode();
+        root = new GTrieNode<>();
     }
 
     public GTrie(Comparator<V> resultComparator) {
         this.resultComparator = resultComparator;
-        root = new GTrieNode();
+        root = new GTrieNode<>();
     }
 
     public GTrie(TrieFilter<V> filter, Comparator<V> comparator) {
@@ -41,12 +45,12 @@ public class GTrie<K extends Comparable, V> {
      * Public interface
      *
      */
-
-    public void insert(List<K> sequence, V value) {
+    @Override
+    public void insert(Collection<K> sequence, V value) {
         List<K> sortedSequence = sortAndDistinct(sequence);
-        GTrieNode current = root;
+        GTrieNode<K,V> current = root;
         for (K word : sortedSequence) {
-            GTrieNode<V> existingNode = (GTrieNode<V>) current.getChildren().get(word);
+            GTrieNode<K,V> existingNode = current.getChildren().get(word);
             if (existingNode == null) {
                 GTrieNode newNode = new GTrieNode();
                 current.getChildren().put(word, newNode);
@@ -55,22 +59,44 @@ public class GTrie<K extends Comparable, V> {
                 current = existingNode;
             }
         }
-        current.setEndOfSentence(true);
+        //add result for current node
         current.getResults().add(value);
     }
 
-    public boolean delete(List<K> sequence, V value) {
+    @Override
+    public boolean remove(Collection<K> sequence, V value) {
         List<K> sortedSequence = sortAndDistinct(sequence);
-        return delete(root, sortedSequence, value);
+        return remove(root, sortedSequence, value);
     }
 
+    @Override
     public boolean isEmpty() {
         return root == null || root.getChildren().isEmpty();
     }
 
-    public List<V> find(List<K> sequence) {
+    @Override
+    public List<V> find(Collection<K> sequence) {
         List<K> words = sortAndDistinct(sequence);
         return this.find(root, words);
+    }
+
+    @Override
+    public List<V> find(Collection<K> sequence, Comparator<V> resultComparator) {
+        this.resultComparator = resultComparator;
+        return this.find(sequence);
+    }
+
+    @Override
+    public List<V> find(Collection<K> sequence, TrieFilter<V> resultFilter) {
+        this.resultFilter = resultFilter;
+        return this.find(sequence);
+    }
+
+    @Override
+    public List<V> find(Collection<K> sequence, Comparator<V> resultComparator, TrieFilter<V> resultFilter) {
+        this.resultComparator = resultComparator;
+        this.resultFilter = resultFilter;
+        return this.find(sequence);
     }
 
     /**
@@ -79,12 +105,12 @@ public class GTrie<K extends Comparable, V> {
      *
      */
 
-    private List<V> find(GTrieNode localRoot, List<K> sequence) {
+    private List<V> find(GTrieNode<K,V> localRoot, List<K> sequence) {
         List<V> localResults = new ArrayList<>();
 
         //found results
         if (!localRoot.getResults().isEmpty()) {
-            localResults = addIfAccepted(localRoot, localResults);
+            addIfAccepted(localRoot, localResults);
         }
 
         if (localRoot.getChildren().isEmpty()) {
@@ -93,37 +119,33 @@ public class GTrie<K extends Comparable, V> {
 
         //run for children
         for (K item : sequence) {
-            GTrieNode<V> node = (GTrieNode<V>) localRoot.getChildren().get(item);
+            GTrieNode<K,V> node = localRoot.getChildren().get(item);
             if (node != null) { //found item - search deeper
                 localResults.addAll(0, this.find(node, this.getSubsequenceAfterItem(sequence, item)));
             }
         }
 
-        //TODO: sorting, it may be optimized maybe somewhow
         return localResults.stream().sorted(resultComparator).collect(Collectors.toList());
     }
 
-    private List<V> addIfAccepted(GTrieNode localRoot, List<V> localResults) {
-        List<V> results = localRoot.getResults();
-        if (resultFilter == null) {
-            localResults.addAll(results.stream().sorted(resultComparator).collect(Collectors.toList()));
-        } else {
-            localResults.addAll(results.stream().filter(resultFilter::accept).sorted(resultComparator).collect(Collectors.toList()));
-        }
+    private List<V> addIfAccepted(GTrieNode<K,V> localRoot, List<V> localResults) {
+        Set<V> results = localRoot.getResults();
+        localResults.addAll(
+                results.stream().filter(resultFilter::accept).sorted(resultComparator).collect(Collectors.toList()));
         return localResults;
     }
 
     private List<K> getSubsequenceAfterItem(List<K> sequence, K item) {
-        return sequence.stream().skip(sequence.indexOf(item) + 1).collect(Collectors.toList());
+        return sequence.stream().skip(sequence.indexOf(item) + 1L).collect(Collectors.toList());
     }
 
-    private List<K> sortAndDistinct(List<K> sequence) {
+    private List<K> sortAndDistinct(Collection<K> sequence) {
         return sequence.stream().distinct().sorted().collect(Collectors.toList());
     }
 
-    private boolean delete(GTrieNode localRoot, List<K> sequence, V value) {
+    private boolean remove(GTrieNode<K,V> localRoot, List<K> sequence, V value) {
 
-        List results = localRoot.getResults();
+        Set<V> results = localRoot.getResults();
         if (!results.isEmpty() && results.contains(value)) {
             results.remove(value);
             if (results.isEmpty() && localRoot.getChildren().isEmpty()) {
@@ -142,9 +164,9 @@ public class GTrie<K extends Comparable, V> {
         //run for children
         boolean result = false;
         for (K item : sequence) {
-            GTrieNode<V> node = (GTrieNode<V>) localRoot.getChildren().get(item);
+            GTrieNode<K,V> node = localRoot.getChildren().get(item);
             if (node != null) { //found item - search deeper
-                result = this.delete(node, this.getSubsequenceAfterItem(sequence, item), value);
+                result = this.remove(node, this.getSubsequenceAfterItem(sequence, item), value);
                 if (node.getChildren().isEmpty()) {
                     localRoot.getChildren().remove(item);
                 }
